@@ -2257,15 +2257,26 @@ def segment_specs(file_path, x, seg_length, seg_hop=1, max_length=None):
 
     n_wins = x.shape[1]-(seg_length-1)
     
+    # debug 0423
+    print("n_wins", n_wins, " seg_length", seg_length, " x.shape[1]", x.shape[1])
+    n_wins = max(x.shape[1] - (seg_length - 1), 0)
+
+    
     # broadcast magic to segment melspec
     idx1 = torch.arange(seg_length)
     idx2 = torch.arange(n_wins)
     idx3 = idx1.unsqueeze(0) + idx2.unsqueeze(1)
     x = x.transpose(1,0)[idx3,:].unsqueeze(1).transpose(3,2)
         
-    if seg_hop>1:
-        x = x[::seg_hop,:]
-        n_wins = int(np.ceil(n_wins/seg_hop))
+    # if seg_hop>1:
+    #     x = x[::seg_hop,:]
+    #     n_wins = int(np.ceil(n_wins/seg_hop))
+    
+    # debug 0423
+    # if seg_hop > 1:
+    #     x = x[::seg_hop]
+    #     n_wins = (n_wins + seg_hop - 1) // seg_hop 
+
         
     if max_length is not None:
         if max_length < n_wins:
@@ -2273,6 +2284,9 @@ def segment_specs(file_path, x, seg_length, seg_hop=1, max_length=None):
         x_padded = torch.zeros((max_length, x.shape[1], x.shape[2], x.shape[3]))
         x_padded[:n_wins,:] = x
         x = x_padded
+        
+    # debug 0423
+    print("x.shape", x.shape, " n_wins", n_wins)
                 
     return x, np.array(n_wins)
 
@@ -2327,3 +2341,5 @@ def get_librosa_melspec(
 
 
 
+
+# %%

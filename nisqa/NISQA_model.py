@@ -52,7 +52,7 @@ class nisqaModel(object):
             self._evaluate_mos(mapping=mapping, do_print=do_print, do_plot=do_plot)      
             
     def predict(self):
-        print('---> Predicting ...')
+        # print('---> Predicting ...')
         if self.args['tr_parallel']:
             self.model = nn.DataParallel(self.model)           
         
@@ -72,12 +72,17 @@ class nisqaModel(object):
                 num_workers=self.args['tr_num_workers'])                 
                     
         if self.args['output_dir']:
-            self.ds_val.df['model'] = self.args['name']
-            self.ds_val.df.to_csv(
-                os.path.join(self.args['output_dir'], 'NISQA_results.csv'), 
-                index=False)
+            output_path = os.path.join(self.args['output_dir'], 'NISQA_results.csv')
+            if os.path.exists(output_path):
+                existing_df = pd.read_csv(output_path)
+                self.ds_val.df['model'] = self.args['name']
+                updated_df = pd.concat([existing_df, self.ds_val.df], ignore_index=True)
+                updated_df.to_csv(output_path, index=False)
+            else:
+                self.ds_val.df['model'] = self.args['name']
+                self.ds_val.df.to_csv(output_path, index=False)
             
-        print(self.ds_val.df.to_string(index=False))
+        # print(self.ds_val.df.to_string(index=False))
         return self.ds_val.df
 
     def _train_mos(self):
@@ -1008,7 +1013,7 @@ class nisqaModel(object):
                 'de_fuse': self.args['de_fuse'],        
                 })
                       
-        print('Model architecture: ' + self.args['model'])
+        # print('Model architecture: ' + self.args['model'])
         if self.args['model']=='NISQA':
             self.model = NL.NISQA(**self.model_args)     
         elif self.args['model']=='NISQA_DIM':
@@ -1021,7 +1026,7 @@ class nisqaModel(object):
         # Load weights if pretrained model is used ------------------------------------
         if self.args['pretrained_model']:
             missing_keys, unexpected_keys = self.model.load_state_dict(checkpoint['model_state_dict'], strict=True)
-            print('Loaded pretrained model from ' + self.args['pretrained_model'])
+            # print('Loaded pretrained model from ' + self.args['pretrained_model'])
             if missing_keys:
                 print('missing_keys:')
                 print(missing_keys)
@@ -1043,7 +1048,7 @@ class nisqaModel(object):
                 self.dev = torch.device("cpu")
             elif self.args['tr_device']=='cuda':
                 self.dev = torch.device("cuda")
-        print('Device: {}'.format(self.dev))
+        # print('Device: {}'.format(self.dev))
         
         if "tr_parallel" in self.args:
             if (self.dev==torch.device("cpu")) and self.args['tr_parallel']==True:
